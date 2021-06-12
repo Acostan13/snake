@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 import time
+import random
 
 # Global variables
 SIZE = 40
@@ -10,13 +11,20 @@ class Apple:
     def __init__(self, parent_screen):
         self.image = pygame.image.load("resources/apple.jpg").convert()
         self.parent_screen = parent_screen
-        self.x = SIZE*3
-        self.y = SIZE*3
+        self.x = 120
+        self.y = 120
 
     def draw(self):
         # draw the apple
         self.parent_screen.blit(self.image, (self.x, self.y))
         pygame.display.flip()
+
+    def move(self):
+        # move the apple randomly
+        # values set as multiples of 1000 and 800 for x/y
+        self.x = random.randint(1, 25) * SIZE
+        self.y = random.randint(1, 20) * SIZE
+
 
 class Snake:
     def __init__(self, parent_screen, length):
@@ -26,17 +34,24 @@ class Snake:
 
         # create the first block
         self.block = pygame.image.load("resources/block.jpg").convert()
-        self.x, self.y = [SIZE] * length, [SIZE] * length
+        self.x = [40] * length
+        self.y = [40] * length
 
         # default direction
         self.direction = 'down'
+
+    # increase the snake's length when eating an apple
+    def increase_length(self):
+        self.length += 1
+        self.x.append(-1)
+        self.y.append(-1)
 
     def draw(self):
         # giving the surface color
         self.parent_screen.fill((3, 144, 252))
 
         for i in range(self.length):
-            # draw the block
+            # draw the block dynamically
             self.parent_screen.blit(self.block, (self.x[i], self.y[i]))
 
         # updating the screen
@@ -60,9 +75,11 @@ class Snake:
 
         # iterate backwards for every previous block
         for i in range(self.length - 1, 0, -1):
-            self.x[i] = self.x[i-1]
-            self.y[i] = self.y[i-1]
+            # update snake's body
+            self.x[i] = self.x[i - 1]
+            self.y[i] = self.y[i - 1]
 
+        # update snake's head
         if self.direction == 'up':
             self.y[0] -= SIZE
         if self.direction == 'down':
@@ -87,16 +104,41 @@ class Game:
         self.surface.fill((3, 144, 252))
 
         # creating the snake and apple objects
-        self.snake = Snake(self.surface, 6)
+        self.snake = Snake(self.surface, 1)
         self.apple = Apple(self.surface)
 
         # draw the snake/apple
         self.snake.draw()
         self.apple.draw()
 
+    def collision(self, x1, y1, x2, y2):
+        # if the snake's position falls
+        if x1 >= x2 and x1 < x2 + SIZE:
+            # anywhere within the apples position
+            if y1 >= y2 and y1 < y2 + SIZE:
+                return True
+
+        return False
+
     def play(self):
         self.snake.walk()
         self.apple.draw()
+        self.display_score()
+        pygame.display.flip()
+
+        # if the snake's head intersects with an apple
+        if self.collision(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
+
+            # increase the snakes length by 1
+            self.snake.increase_length()
+
+            # and move the apple to a random position
+            self.apple.move()
+
+    def display_score(self):
+        font = pygame.font.SysFont('arial', 30)
+        score = font.render(f'Score: {self.snake.length}', True, (255, 255, 255))
+        self.surface.blit(score, (800, 10))
 
     def run(self):
         # event loop for starting/ending the game
@@ -131,9 +173,6 @@ class Game:
 
 # initializing the module
 if __name__ == "__main__":
-
     # running the game
     game = Game()
     game.run()
-
-
