@@ -2,15 +2,31 @@ import pygame
 from pygame.locals import *
 import time
 
+# Global variables
+SIZE = 40
+
+
+class Apple:
+    def __init__(self, parent_screen):
+        self.image = pygame.image.load("resources/apple.jpg").convert()
+        self.parent_screen = parent_screen
+        self.x = SIZE*3
+        self.y = SIZE*3
+
+    def draw(self):
+        # draw the apple
+        self.parent_screen.blit(self.image, (self.x, self.y))
+        pygame.display.flip()
 
 class Snake:
-    def __init__(self, surface):
-        # storing the screen as a class member
-        self.parent_screen = surface
+    def __init__(self, parent_screen, length):
+        # storing class members
+        self.parent_screen = parent_screen
+        self.length = length
 
         # create the first block
         self.block = pygame.image.load("resources/block.jpg").convert()
-        self.x, self.y = 100, 100
+        self.x, self.y = [SIZE] * length, [SIZE] * length
 
         # default direction
         self.direction = 'down'
@@ -19,8 +35,9 @@ class Snake:
         # giving the surface color
         self.parent_screen.fill((3, 144, 252))
 
-        # draw the block
-        self.parent_screen.blit(self.block, (self.x, self.y))
+        for i in range(self.length):
+            # draw the block
+            self.parent_screen.blit(self.block, (self.x[i], self.y[i]))
 
         # updating the screen
         pygame.display.flip()
@@ -40,14 +57,20 @@ class Snake:
 
     # perpetuating the snakes movement
     def walk(self):
+
+        # iterate backwards for every previous block
+        for i in range(self.length - 1, 0, -1):
+            self.x[i] = self.x[i-1]
+            self.y[i] = self.y[i-1]
+
         if self.direction == 'up':
-            self.y -= 10
+            self.y[0] -= SIZE
         if self.direction == 'down':
-            self.y += 10
+            self.y[0] += SIZE
         if self.direction == 'left':
-            self.x -= 10
+            self.x[0] -= SIZE
         if self.direction == 'right':
-            self.x += 10
+            self.x[0] += SIZE
 
         self.draw()
 
@@ -58,16 +81,22 @@ class Game:
         pygame.init()
 
         # creating a surface
-        self.surface = pygame.display.set_mode((500, 500))
+        self.surface = pygame.display.set_mode((1000, 800))
 
         # giving the surface color
         self.surface.fill((3, 144, 252))
 
-        # creating the snake
-        self.snake = Snake(self.surface)
+        # creating the snake and apple objects
+        self.snake = Snake(self.surface, 6)
+        self.apple = Apple(self.surface)
 
-        # draw the snake
+        # draw the snake/apple
         self.snake.draw()
+        self.apple.draw()
+
+    def play(self):
+        self.snake.walk()
+        self.apple.draw()
 
     def run(self):
         # event loop for starting/ending the game
@@ -94,8 +123,10 @@ class Game:
                 elif event.type == QUIT:
                     running = False
 
-            self.snake.walk()
-            time.sleep(0.2)
+            # play the game!
+            self.play()
+
+            time.sleep(0.3)
 
 
 # initializing the module
