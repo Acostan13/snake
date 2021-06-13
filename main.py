@@ -4,7 +4,9 @@ import time
 import random
 
 # Global variables
-SIZE = 40
+SIZE_OF_TILE = 40
+GAME_WIDTH = 1000
+GAME_HEIGHT = 800
 
 
 class Apple:
@@ -22,8 +24,8 @@ class Apple:
     def move(self):
         # move the apple randomly
         # values set as multiples of 1000 and 800 for x/y
-        self.x = random.randint(1, 24) * SIZE
-        self.y = random.randint(1, 19) * SIZE
+        self.x = random.randint(1, 24) * SIZE_OF_TILE
+        self.y = random.randint(1, 19) * SIZE_OF_TILE
 
 
 class Snake:
@@ -47,7 +49,7 @@ class Snake:
         self.y.append(-1)
 
     def draw(self):
-
+        # loop over every snake block
         for i in range(self.length):
             # draw the block dynamically
             self.parent_screen.blit(self.block, (self.x[i], self.y[i]))
@@ -79,13 +81,13 @@ class Snake:
 
         # update snake's head
         if self.direction == 'up':
-            self.y[0] -= SIZE
+            self.y[0] -= SIZE_OF_TILE
         if self.direction == 'down':
-            self.y[0] += SIZE
+            self.y[0] += SIZE_OF_TILE
         if self.direction == 'left':
-            self.x[0] -= SIZE
+            self.x[0] -= SIZE_OF_TILE
         if self.direction == 'right':
-            self.x[0] += SIZE
+            self.x[0] += SIZE_OF_TILE
 
         self.draw()
 
@@ -101,7 +103,7 @@ class Game:
         self.play_background_music()
 
         # creating a surface
-        self.surface = pygame.display.set_mode((1000, 800))
+        self.surface = pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
 
         # rendering the background color
         self.render_background()
@@ -116,9 +118,9 @@ class Game:
 
     def collision(self, x1, y1, x2, y2):
         # if the snake's head position
-        if x2 <= x1 < x2 + SIZE:
+        if x2 <= x1 < x2 + SIZE_OF_TILE:
             #  falls anywhere within the apples position
-            if y2 <= y1 < y2 + SIZE:
+            if y2 <= y1 < y2 + SIZE_OF_TILE:
                 return True
         return False
 
