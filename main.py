@@ -5,7 +5,6 @@ import random
 
 # Global variables
 SIZE = 40
-BACKGROUND_COLOR = (3, 144, 252)
 
 
 class Apple:
@@ -28,15 +27,15 @@ class Apple:
 
 
 class Snake:
-    def __init__(self, parent_screen, length):
+    def __init__(self, parent_screen):
         # storing class members
         self.parent_screen = parent_screen
-        self.length = length
+        self.length = 1
 
         # create the first block
         self.block = pygame.image.load("resources/block.jpg").convert()
-        self.x = [40] * length
-        self.y = [40] * length
+        self.x = [40]
+        self.y = [40]
 
         # default direction
         self.direction = 'down'
@@ -48,8 +47,6 @@ class Snake:
         self.y.append(-1)
 
     def draw(self):
-        # giving the surface color
-        self.parent_screen.fill(BACKGROUND_COLOR)
 
         for i in range(self.length):
             # draw the block dynamically
@@ -72,7 +69,7 @@ class Snake:
         self.direction = 'down'
 
     # perpetuating the snakes movement
-    def walk(self):
+    def slither(self):
 
         # iterate backwards for every previous block
         for i in range(self.length - 1, 0, -1):
@@ -97,15 +94,20 @@ class Game:
     def __init__(self):
         # initializing the game
         pygame.init()
+        pygame.display.set_caption("Snake")
+        pygame.mixer.init()
+
+        # play the background music!
+        self.play_background_music()
 
         # creating a surface
         self.surface = pygame.display.set_mode((1000, 800))
 
-        # giving the surface color
-        self.surface.fill((3, 144, 252))
+        # rendering the background color
+        self.render_background()
 
         # creating the snake and apple objects
-        self.snake = Snake(self.surface, 1)
+        self.snake = Snake(self.surface)
         self.apple = Apple(self.surface)
 
         # draw the snake/apple
@@ -113,22 +115,37 @@ class Game:
         self.apple.draw()
 
     def collision(self, x1, y1, x2, y2):
-        # if the snake's position falls
-        if x1 >= x2 and x1 < x2 + SIZE:
-            # anywhere within the apples position
-            if y1 >= y2 and y1 < y2 + SIZE:
+        # if the snake's head position
+        if x2 <= x1 < x2 + SIZE:
+            #  falls anywhere within the apples position
+            if y2 <= y1 < y2 + SIZE:
                 return True
-
         return False
 
+    def play_sound(self, sound):
+        sounds = pygame.mixer.Sound(f"resources/{sound}.mp3")
+        pygame.mixer.Sound.play(sounds)
+
+    def play_background_music(self):
+        pygame.mixer.music.load('resources/bg_music_1.mp3')
+        pygame.mixer.music.play()
+
+    def render_background(self):
+        bg = pygame.image.load('resources/background.jpg')
+        self.surface.blit(bg, (0, 0))
+
     def play(self):
-        self.snake.walk()
+        self.render_background()
+        self.snake.slither()
         self.apple.draw()
         self.display_score()
         pygame.display.flip()
 
         # if the snake's head intersects with an apple
         if self.collision(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
+            # create an apple bite sound!
+            self.play_sound("Apple-bite")
+
             # increase the snakes length by 1
             self.snake.increase_length()
 
@@ -138,25 +155,36 @@ class Game:
         # if the snake collides with itself
         for i in range(3, self.snake.length):
             if self.collision(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
+                # create a crash sound!
+                self.play_sound("crash")
                 raise Exception("Game over")
 
     def game_over(self):
-        self.surface.fill(BACKGROUND_COLOR)
+        self.render_background()
         font = pygame.font.SysFont('arial', 30)
         game_over_message = font.render(f'Game Over! Your score is: {self.snake.length}', True, (255, 255, 255))
         self.surface.blit(game_over_message, (200, 300))
         play_again = font.render('Press Enter to play again or press Escape to exit', True, (255, 255, 255))
         self.surface.blit(play_again, (200, 350))
+
         pygame.display.flip()
+        pygame.mixer.music.pause()
 
     def display_score(self):
         font = pygame.font.SysFont('arial', 30)
         score = font.render(f'Score: {self.snake.length}', True, (255, 255, 255))
         self.surface.blit(score, (800, 10))
 
+    def display_paused(self):
+        font = pygame.font.SysFont('arial', 40)
+        paused = font.render('PAUSED', True, (255, 255, 255))
+        self.surface.blit(paused, (400, 400))
+        pygame.display.flip()
+        pygame.mixer.music.pause()
+
     def reset(self):
         # creating the snake and apple objects
-        self.snake = Snake(self.surface, 1)
+        self.snake = Snake(self.surface)
         self.apple = Apple(self.surface)
 
     def run(self):
@@ -170,8 +198,14 @@ class Game:
                     if event.key == K_ESCAPE:
                         running = False
 
+                    # pause the game
                     if event.key == K_RETURN:
-                        pause = False
+                        if not pause:
+                            pause = True
+                            self.display_paused()
+                        else:
+                            pygame.mixer.music.unpause()
+                            pause = False
 
                     if not pause:
                         if event.key == K_UP:
@@ -201,7 +235,7 @@ class Game:
                 self.reset()
 
             # time between snake movements
-            time.sleep(0.2)
+            time.sleep(0.25)
 
 
 # initializing the module
