@@ -122,6 +122,13 @@ class Game:
                 return True
         return False
 
+    def out_of_bounds(self, x, y):
+        # if the snake slithers out of bounds
+        if x > 1000 or x < 0 or y > 800 or y < 0:
+            # create a crash sound!
+            self.play_sound("crash")
+            raise Exception("Game over")
+
     def play_sound(self, sound):
         sounds = pygame.mixer.Sound(f"resources/{sound}.mp3")
         pygame.mixer.Sound.play(sounds)
@@ -140,6 +147,12 @@ class Game:
         self.apple.draw()
         self.display_score()
         pygame.display.flip()
+
+        # if the snake goes out of bounds
+        if self.out_of_bounds(self.snake.x[0], self.snake.y[0]):
+            # create a crash sound!
+            self.play_sound("crash")
+            raise Exception("Game over")
 
         # if the snake's head intersects with an apple
         if self.collision(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
